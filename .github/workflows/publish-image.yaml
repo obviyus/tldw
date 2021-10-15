@@ -20,7 +20,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build the ssgbot Docker image
+      - name: Build the Docker image
         run: |
-          docker build . --tag ghcr.io/super-serious/bot:latest
-          docker push ghcr.io/super-serious/bot:latest
+          docker build . --tag ghcr.io/obviyus/bot:latest
+          docker push ghcr.io/obviyus/bot:latest
