@@ -1,0 +1,26 @@
+version: "3"
+services:
+  tldw-db:
+    image: postgres
+    environment:
+      - POSTGRES_USER=tldw
+      - POSTGRES_PASSWORD=tldw
+      - POSTGRES_DB=tldw
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+
+  tldw:
+    build: .
+
+    # Set env vars required for server
+    environment:
+      - DBNAME=tldw
+      - DBUSER=tldw
+      - DBPASS=tldw
+      - DBHOST=tldw-db
+      - DOWNCOUNT_ADDRESS=0.0.0.0
+      - DOWNCOUNT_PORT=8080
+    depends_on:
+      - tldw-db
+    ports:
+      - "8080:8080"
