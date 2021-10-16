@@ -20,7 +20,7 @@ func registerRoutes(router *gin.Engine) {
 		api.GetSummary(v1)
 		api.GetSummaryByID(v1)
 		api.SubmitSummary(v1)
-		api.SummaryVote(v1)
+		api.SubmitVote(v1)
 
 		// User
 		api.SignupUser(v1)

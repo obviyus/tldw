@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -143,11 +144,11 @@ type VoteParams struct {
 	ApiKey   string `json:"key"`
 }
 
-// SummaryVote POST /api/v1/summary/:videoId/:Id
+// SubmitVote POST /api/v1/summary/:videoId/:Id
 //
 // Parameters:
 // modifier: boolean value to either increment or decrement
-func SummaryVote(router *gin.RouterGroup) {
+func SubmitVote(router *gin.RouterGroup) {
 	router.POST(
 		"/summary/:videoId/:Id", func(c *gin.Context) {
 			var params VoteParams
@@ -168,22 +169,52 @@ func SummaryVote(router *gin.RouterGroup) {
 				AbortUnauthorized(c)
 				return
 			} else {
-				// Check if Id exists in database
-				if summary := models.FindSummaryByID(Id); summary != nil {
-					if params.Modifier {
-						summary.UpdateScore(1)
-					} else {
-						summary.UpdateScore(-1)
-					}
-					c.JSON(
-						http.StatusOK, gin.H{
-							"summary": summary,
-						},
-					)
+				// Check if user exists
+				if user := models.FindUserByUserID(key.ID); user == nil {
+					AbortUnauthorized(c)
+					return
 				} else {
-					AbortEntityNotFound(c)
-				}
+					// Check if SummaryID exists in database
+					if summary := models.FindSummaryByID(Id); summary == nil {
+						AbortEntityNotFound(c)
+					} else {
+						var value int
+						if params.Modifier {
+							value = 1
+						} else {
+							value = -1
+						}
 
+						// Check if user has voted for this Summary
+						if vote := summary.SummaryUserVote(user); vote == nil {
+							if newVote := summary.SubmitVote(user.ID, value); newVote != nil {
+								c.JSON(
+									http.StatusOK,
+									gin.H{
+										"vote": newVote,
+									},
+								)
+							} else {
+								AbortUnexpected(c)
+							}
+						} else {
+							if vote.Value == value {
+								AbortAlreadyExists(c, fmt.Sprintf("vote %s", vote.ID))
+							} else {
+								if newVote := vote.UpdateVote(value); newVote == nil {
+									c.JSON(
+										http.StatusOK,
+										gin.H{
+											"vote": newVote,
+										},
+									)
+								} else {
+									AbortUnexpected(c)
+								}
+							}
+						}
+					}
+				}
 			}
 		},
 	)

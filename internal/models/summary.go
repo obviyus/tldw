@@ -5,6 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"tldw-server/pkg/rnd"
 	"tldw-server/pkg/txt"
 )
 
@@ -55,6 +56,10 @@ func FindSummariesForVideo(videoID string) (result []Summary) {
 	if err := g.Db().Where(
 		"video_id = ? AND score > -5", videoID,
 	).Order("score desc").Limit(5).Find(&result).Error; err == nil {
+		for _, summary := range result {
+			summary.Score = FindVotesForSummary(summary.ID).total
+		}
+
 		return result
 	} else {
 		log.Debugf("user %s not found", txt.Quote(videoID))
@@ -74,6 +79,7 @@ func FindSummaryByID(SummaryID string) (result *Summary) {
 			log.Errorf("user: %s (update number of requests)", err)
 		}
 
+		result.Score = FindVotesForSummary(result.ID).total
 		return result
 	} else {
 		log.Debugf("user %s not found", txt.Quote(SummaryID))
@@ -81,12 +87,28 @@ func FindSummaryByID(SummaryID string) (result *Summary) {
 	}
 }
 
-// UpdateScore modifies the summary score of an entity
-func (s *Summary) UpdateScore(modifier int) (result *Summary) {
-	s.Score += modifier
-	if err := s.Save(); err != nil {
+// SummaryUserVote returns a Vote if User has already voted else nil
+func (s *Summary) SummaryUserVote(u *User) (result *Vote) {
+	if err := g.Db().Table("votes").Where("summary_id = ? AND user_id = ?", s.ID, u.ID).First(&result); err == nil {
+		return result
+	} else {
 		return nil
 	}
+}
 
-	return s
+// SubmitVote adds a vote for a user to a summaryID
+func (s *Summary) SubmitVote(userID string, value int) (result *Vote) {
+	newVote := Vote{
+		ID:        rnd.TLDWID('v'),
+		SummaryID: s.ID,
+		UserID:    userID,
+		Value:     value,
+	}
+
+	if err := newVote.Save(); err == nil {
+		return &newVote
+	} else {
+		log.Error(err)
+		return nil
+	}
 }

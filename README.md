@@ -1,2 +1,3 @@
 # tldw
-WIP: A Chrome extension to display TLDW for YouTube videos
+
+An API server written in Go to handle TLDW requests.

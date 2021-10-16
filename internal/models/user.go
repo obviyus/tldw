@@ -168,6 +168,15 @@ func (u *User) AddSummary(
 	}
 }
 
+// FindSummariesForUser lists all summaries associated with a userID
+func (u *User) FindSummariesForUser() (result []Summary) {
+	if err := g.Db().Model(&u).Association("Summaries").Find(&result); err != nil {
+		return result
+	} else {
+		return nil
+	}
+}
+
 // String returns an identifier that can be used in logs.
 func (u *User) String() string {
 	return u.ID
