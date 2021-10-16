@@ -57,7 +57,7 @@ func FindSummariesForVideo(videoID string) (result []Summary) {
 		"video_id = ? AND score > -5", videoID,
 	).Order("score desc").Limit(5).Find(&result).Error; err == nil {
 		for _, summary := range result {
-			summary.Score = FindVotesForSummary(summary.ID).total
+			summary.Score = FindVotesForSummary(summary.ID)
 		}
 
 		return result
@@ -79,7 +79,10 @@ func FindSummaryByID(SummaryID string) (result *Summary) {
 			log.Errorf("user: %s (update number of requests)", err)
 		}
 
-		result.Score = FindVotesForSummary(result.ID).total
+		result.Score = FindVotesForSummary(result.ID)
+		if err != nil {
+			log.Error(err)
+		}
 		return result
 	} else {
 		log.Debugf("user %s not found", txt.Quote(SummaryID))
@@ -89,7 +92,7 @@ func FindSummaryByID(SummaryID string) (result *Summary) {
 
 // SummaryUserVote returns a Vote if User has already voted else nil
 func (s *Summary) SummaryUserVote(u *User) (result *Vote) {
-	if err := g.Db().Table("votes").Where("summary_id = ? AND user_id = ?", s.ID, u.ID).First(&result); err == nil {
+	if err := g.Db().Model(&Vote{}).Where("summary_id = ? AND user_id = ?", s.ID, u.ID).First(&result).Error; err == nil {
 		return result
 	} else {
 		return nil
@@ -105,7 +108,7 @@ func (s *Summary) SubmitVote(userID string, value int) (result *Vote) {
 		Value:     value,
 	}
 
-	if err := newVote.Save(); err == nil {
+	if err := newVote.Create(); err == nil {
 		return &newVote
 	} else {
 		log.Error(err)

@@ -10,8 +10,9 @@ type Types map[string]interface{}
 // Entities : List of database entities and their table names.
 var Entities = Types{
 	"users":     &User{},
-	"summaries": &Summaries{},
+	"summaries": &Summary{},
 	"api_keys":  &ApiKey{},
+	"votes":     &Vote{},
 }
 
 type RowCount struct {

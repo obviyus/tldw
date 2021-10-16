@@ -201,7 +201,7 @@ func SubmitVote(router *gin.RouterGroup) {
 							if vote.Value == value {
 								AbortAlreadyExists(c, fmt.Sprintf("vote %s", vote.ID))
 							} else {
-								if newVote := vote.UpdateVote(value); newVote == nil {
+								if newVote := vote.UpdateVote(value); newVote != nil {
 									c.JSON(
 										http.StatusOK,
 										gin.H{

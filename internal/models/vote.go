@@ -48,30 +48,28 @@ func (v *Vote) Save() error {
 	return g.Db().Save(v).Error
 }
 
-type VoteSum struct {
-	total int
-}
-
 // FindVotesForSummary returns an existing Vote or nil if not found.
-func FindVotesForSummary(summaryID string) (total *VoteSum) {
-	if err := g.Db().Table("votes").Select("sum(value) as total").Where("summary_id = ?", summaryID).First(&total); err == nil {
+func FindVotesForSummary(summaryID string) (total int) {
+	if err := g.Db().Table("votes").Select("sum(value) as total").Where(
+		"summary_id = ?", summaryID,
+	).Row().Scan(&total); err == nil {
 		return total
 	} else {
 		log.Error(err)
 	}
 
-	return &VoteSum{total: 0}
+	return 0
 }
 
 // FindVotesForUser returns an existing Vote or nil if not found.
-func FindVotesForUser(userID string) (total *VoteSum) {
-	if err := g.Db().Table("votes").Select("sum(value) as total").Where("user_id = ?", userID).First(&total); err == nil {
+func FindVotesForUser(userID string) (total string) {
+	if err := g.Db().Table("votes").Select("sum(value) as total").Where("user_id = ?", userID).Find(&total); err == nil {
 		return total
 	} else {
 		log.Error(err)
 	}
 
-	return &VoteSum{total: 0}
+	return "0"
 }
 
 // FindVoteByID returns an existing Vote or nil if not found.
