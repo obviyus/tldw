@@ -73,7 +73,7 @@ func GetSummaryByID(router *gin.RouterGroup) {
 type summaryParams struct {
 	Summary  string `json:"summary" binding:"required"`
 	Language string `json:"language"`
-	Apikey   string `json:"apikey" binding:"required"`
+	ApiKey   string `json:"key" binding:"required"`
 }
 
 // SubmitSummary POST /api/v1/summary/:videoId
@@ -98,7 +98,7 @@ func SubmitSummary(router *gin.RouterGroup) {
 			var params summaryParams
 			if err := c.BindJSON(&params); err == nil {
 				// Validate API key
-				key := models.FindKey(params.Apikey)
+				key := models.FindKey(params.ApiKey)
 				if key == nil {
 					AbortUnauthorized(c)
 					return
@@ -138,8 +138,9 @@ func SubmitSummary(router *gin.RouterGroup) {
 	)
 }
 
-type Vote struct {
-	Modifier bool `json:"modifier"`
+type VoteParams struct {
+	Modifier bool   `json:"modifier"`
+	ApiKey   string `json:"key"`
 }
 
 // SummaryVote POST /api/v1/summary/:videoId/:Id
@@ -149,7 +150,7 @@ type Vote struct {
 func SummaryVote(router *gin.RouterGroup) {
 	router.POST(
 		"/summary/:videoId/:Id", func(c *gin.Context) {
-			var params Vote
+			var params VoteParams
 			videoId, Id := c.Param("videoId"), c.Param("Id")
 			if videoId == "" || Id == "" {
 				AbortMissingParameter(c, "missing parameter in path")
@@ -162,20 +163,27 @@ func SummaryVote(router *gin.RouterGroup) {
 				return
 			}
 
-			// Check if Id exists in database
-			if summary := models.FindSummaryByID(Id); summary != nil {
-				if params.Modifier {
-					summary.UpdateScore(1)
-				} else {
-					summary.UpdateScore(-1)
-				}
-				c.JSON(
-					http.StatusOK, gin.H{
-						"summary": summary,
-					},
-				)
+			// Validate API key
+			if key := models.FindKey(params.ApiKey); key == nil {
+				AbortUnauthorized(c)
+				return
 			} else {
-				AbortEntityNotFound(c)
+				// Check if Id exists in database
+				if summary := models.FindSummaryByID(Id); summary != nil {
+					if params.Modifier {
+						summary.UpdateScore(1)
+					} else {
+						summary.UpdateScore(-1)
+					}
+					c.JSON(
+						http.StatusOK, gin.H{
+							"summary": summary,
+						},
+					)
+				} else {
+					AbortEntityNotFound(c)
+				}
+
 			}
 		},
 	)
