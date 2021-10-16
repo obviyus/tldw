@@ -97,7 +97,7 @@ func SubmitSummary(router *gin.RouterGroup) {
 			}
 
 			var params summaryParams
-			if err := c.BindJSON(&params); err == nil {
+			if err := c.ShouldBindJSON(&params); err == nil {
 				// Validate API key
 				key := models.FindKey(params.ApiKey)
 				if key == nil {
@@ -159,7 +159,7 @@ func SubmitVote(router *gin.RouterGroup) {
 			} else if !tldw.IsValidVideoID(videoId) {
 				AbortBadRequest(c)
 				return
-			} else if err := c.BindJSON(&params); err != nil {
+			} else if err := c.ShouldBindJSON(&params); err != nil {
 				AbortBadRequest(c)
 				return
 			}

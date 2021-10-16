@@ -24,7 +24,7 @@ func SignupUser(router *gin.RouterGroup) {
 	router.POST(
 		"/signup", func(c *gin.Context) {
 			var params CreateUser
-			if err := c.BindJSON(&params); err == nil {
+			if err := c.ShouldBindJSON(&params); err == nil {
 				// Check if username exists
 				if models.FindUserByName(params.Username) != nil {
 					AbortAlreadyExists(c, fmt.Sprintf("Username %s", params.Username))
@@ -53,6 +53,7 @@ func SignupUser(router *gin.RouterGroup) {
 					AbortUnexpected(c)
 				}
 			} else {
+				log.Error(err)
 				AbortBadRequest(c)
 			}
 		},
