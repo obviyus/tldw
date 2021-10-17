@@ -139,6 +139,44 @@ func SubmitSummary(router *gin.RouterGroup) {
 	)
 }
 
+type Key struct {
+	ApiKey string `json:"key"`
+}
+
+// ListSummaries GET /api/v1/summary/list
+//
+// Parameters:
+// - key: unique API key for user
+func ListSummaries(router *gin.RouterGroup) {
+	router.GET(
+		"/summary/list", func(c *gin.Context) {
+			var params Key
+			if err := c.ShouldBindQuery(&params); err != nil {
+				AbortBadRequest(c)
+			}
+
+			// Validate API key
+			key := models.FindKey(params.ApiKey)
+			if key == nil {
+				AbortUnauthorized(c)
+				return
+			}
+
+			// Check if user exists
+			if user := models.FindUserByUserID(key.ID); user == nil {
+				AbortUnauthorized(c)
+				return
+			} else {
+				c.JSON(
+					http.StatusOK, gin.H{
+						"summaries": user.FindSummariesForUser(),
+					},
+				)
+			}
+		},
+	)
+}
+
 type VoteParams struct {
 	Modifier bool   `json:"modifier"`
 	ApiKey   string `json:"key"`
