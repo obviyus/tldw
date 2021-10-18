@@ -56,8 +56,8 @@ func FindSummariesForVideo(videoID string) (result []Summary) {
 	if err := g.Db().Where(
 		"video_id = ? AND score > -5", videoID,
 	).Order("score desc").Limit(5).Find(&result).Error; err == nil {
-		for _, summary := range result {
-			summary.Score = FindVotesForSummary(summary.ID)
+		for index, summary := range result {
+			result[index].Score = FindVotesForSummary(summary.ID)
 		}
 
 		return result
