@@ -229,7 +229,7 @@ func SubmitVote(router *gin.RouterGroup) {
 								c.JSON(
 									http.StatusOK,
 									gin.H{
-										"vote": newVote,
+										"summary": models.FindSummaryByID(newVote.SummaryID),
 									},
 								)
 							} else {
@@ -243,7 +243,7 @@ func SubmitVote(router *gin.RouterGroup) {
 									c.JSON(
 										http.StatusOK,
 										gin.H{
-											"vote": newVote,
+											"summary": models.FindSummaryByID(newVote.SummaryID),
 										},
 									)
 								} else {
